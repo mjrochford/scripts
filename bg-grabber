@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+BG_LOC=$HOME/Pictures/wall/background
+CLIENT_ID=fc4021cc54993a5cb34a83dc0efbb44abe3c61123933418e5e406656d43e7c55
+API_ENDPOINT="https://api.unsplash.com/photos/random"
+
+BG_CACHE_DIR=$HOME/.cache/bg-grabber
+
+pic_url=$(curl -s "$API_ENDPOINT?client_id=$CLIENT_ID" | jq -r .urls.full)
+echo $pic_url
+
+
+curl -s "$pic_url" > $BG_CACHE_DIR/unsplash
+
+ln -sf $BG_CACHE_DIR/unsplash $BG_LOC
+
+~/.fehbg

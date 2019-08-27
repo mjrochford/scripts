@@ -1,0 +1,145 @@
+#!/bin/bash
+
+usage() {
+        echo "
+    metaed - Metadata editor using ffmpeg
+    Usage: 
+      metaed -i FILE -k KEY -v VALUE
+
+      FILE: Input file to change metadata
+      KEY: Metadata key to alter
+      VALUE: Value to set for the key   
+    OPTIONS
+      i - File to edit
+      k - Metadata key to change
+      v - value to set key to
+      m - manual mode to edit metadata with $EDITOR
+      p - print metadata and exit
+      h - print this help
+      "
+}
+
+TMP_DIR=/tmp/metaed
+
+TMP_DATA=$TMP_DIR/data
+
+# Create TMP_DIR
+if [ ! -d $TMP_DIR ]; then
+        mkdir $TMP_DIR
+fi
+
+# Clear old file
+if [ -e $TMP_DATA ]; then
+        rm $TMP_DATA
+fi
+
+read_metadata() {
+
+        # Read metadata into a file
+        ffmpeg -loglevel 0 -i "$1" -f ffmetadata $TMP_DATA
+
+}
+
+apply_metadata() {
+
+        filename=$(basename -- "$file")
+        extension="${filename##*.}"
+        filename="${filename%.*}"
+
+        TMP_FILE=$TMP_DIR"/new_"$filename.$extension
+
+        echo "Applying $key=$val to $filename"
+
+        # Create new file with edited metadata
+        ffmpeg -loglevel 0 -i "$1" -i $TMP_DATA -map_metadata 1 -codec copy "$TMP_FILE" >/dev/null 2>&1
+
+        # Move new file to original file's location
+        mv "$TMP_FILE" "$1"
+
+}
+
+edit_meta_data() {
+
+        grep -q "^$key=" $TMP_DATA && # Grep to find key=val
+                sed -i "s/^$key=.*/$key=$val/" $TMP_DATA || # Edit file to use new value for key
+                sed -i "$ a\\$key=$val" $TMP_DATA # Insert new key=val if it doesn't exist
+
+}
+
+prompt_key_val() {
+
+        # Display title
+        echo -n "Title: "
+        grep -G "^title=.*" $TMP_DATA | sed "s/title=//"
+        echo -n "Artist: "
+        grep -G "^artist=.*" $TMP_DATA | sed "s/artist=//"
+
+        if [ -z ${key} ]; then
+                echo -n "Key: "
+                read key
+        fi
+
+        if [ -z ${val} ]; then
+                echo -n "Val: "
+                read val
+        fi
+
+}
+
+edit_file() {
+        if [ -e "$1" ]; then
+                read_metadata "$1"
+
+                if [ -z "${key}" ] || [ -z "${val}" ] && [[ $edit_command != $EDITOR ]]; then
+                        prompt_key_val
+                fi
+
+                $edit_command $TMP_DATA
+
+                apply_metadata "$1"
+        else
+                echo "File not found"
+                exit
+        fi
+
+}
+
+edit_command="edit_meta_data"
+command="e"
+
+while getopts "hpmi:k:v:" opt; do
+        case ${opt} in
+        i)
+                file=${OPTARG}
+                ;;
+        k)
+                key=${OPTARG}
+                ;;
+        v)
+                val=${OPTARG}
+                ;;
+        m)
+                edit_command=$EDITOR
+                ;;
+        p)
+                command="p"
+                ;;
+        h)
+                usage
+                exit
+                ;;
+        :)
+                echo "Invalid option: ${OPTARG} requires an argument" 1>&2
+                ;;
+        esac
+done
+
+case $command in
+p)
+        read_metadata "$file"
+        cat "$TMP_DATA"
+        ;;
+e)
+        edit_file "$file"
+        ;;
+esac

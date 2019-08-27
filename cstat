@@ -1,0 +1,44 @@
+#!/bin/sh
+
+prepend_zero() {
+        if (($1 < 10)); then
+                echo 0$1
+        else
+                echo $1
+        fi
+}
+
+format_time() {
+        seconds=$1
+
+        hours=$(prepend_zero $((seconds / 3600)))
+        seconds=$((seconds % 3600))
+        min=$(prepend_zero $((seconds / 60)))
+        sec=$(prepend_zero $((seconds % 60)))
+
+        if ((hours > 0)); then
+                echo $hours:$min:$sec
+        else
+                echo $min:$sec
+        fi
+}
+
+main() {
+        nowplaying=$(cmus-remote -Q | grep -e "^status")
+        track_artist=$(cmus-remote -Q | grep -e "^tag artist" | sed -e "s/^tag artist//g")
+        track_title=$(cmus-remote -Q | grep -e "^tag title" | sed -e "s/^tag title //g")
+        #track_dur=$(format_time `cmus-remote -Q | grep -e "^duration" | sed "s/^duration //g"`)
+        #track_pos=$(format_time `cmus-remote -Q | grep -e "^position" | sed "s/^position //g"`)
+
+        playing_regex=".*playing"
+        paused_regex=".*paused"
+        if [[ $nowplaying =~ $playing_regex ]]; then
+                #echo "$track_artist · $track_title [$track_pos / $track_dur]"
+                echo "$track_artist · $track_title"
+        elif [[ $nowplaying =~ $paused_regex ]]; then
+                echo "$track_title - Paused"
+        fi
+
+}
+
+main

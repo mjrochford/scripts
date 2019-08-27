@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+conn=$(nmcli -f NAME connection show | sed "/NAME/d" | fzf | awk '{$1=$1};1')
+
+nmcli -a connection up "$conn"

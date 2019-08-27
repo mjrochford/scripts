@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# Separator between modules
+SEP=" | "
+
+dwmdate ()
+{
+        date "+%a %d %H:%M"
+}
+
+# Space seperated list of scripts to put in the bar
+MODULES="ncmpcpp_np dwmwifi dwmbatt dwmvol dwmdate"
+
+add_module() 
+{
+        result=$($1)
+        if [[ ! -z $result ]]; then
+                BAR=$BAR$result$SEP
+        fi
+}
+
+ncmpcpp_np () {
+        ncmpcpp --current-song "%a - %t"
+}
+
+main() 
+{
+        # Prepend bar var with a space
+        BAR=" "
+
+        for mod in $MODULES; do 
+                add_module $mod
+        done
+
+        BAR=${BAR/%$SEP/}
+
+        xsetroot -name "$BAR"
+
+}
+
+main

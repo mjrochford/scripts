@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [[ -n $1 ]]; then
+        DIR=$1
+else
+        DIR="$HOME/Documents"
+fi
+echo $DIR
+
+file=$(find "$DIR" -type f | \
+        sed "/\/\./d" | \
+        sed "/\.pdf\|\.docx\|\.odt\|\.md/!d" | \
+        sed "s/\/home\/matt/~/" | \
+        dmenu)
+
+file=$(echo $file | sed "s/~/\/home\/matt/")
+
+if [[ -n $file ]]; then
+    rifle "$file"
+fi
+

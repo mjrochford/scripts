@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+readarray -t DEVICEIDS <<< $(echo "devices" | bluetoothctl | awk '/^Device/ {print $2}')
+readarray -t DEVICES <<< $(echo "devices" | bluetoothctl | awk '/^Device/ {print $3}')
+
+SEL=$(echo "${DEVICES[@]}" | dmenu -p "Device:")
+
+for ((i=0;i<${#DEVICES[@]};i++)); do
+        devid=${DEVICEIDS[$i]}
+        dev=${DEVICES[$i]}
+
+        if [[ $dev == $SEL ]]; then
+                echo "connecting $dev"
+                echo "connect $devid" | bluetoothctl
+        fi
+done
+
+        

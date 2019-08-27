@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+acpi -b | awk '{print $3" "$4}' | sed 's/,//g'

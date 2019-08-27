@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+write_vol () {
+        i=$1
+
+        if [[ ${MUTE[$i]} == "no" ]]; then
+                echo -n $i:${VOL[$i]}
+        else 
+                echo -n "$i muted"
+        fi
+}
+
+LABEL=""
+
+d=$(pactl list sinks | awk '/Description/ {print $2}')
+v=$(pactl list sinks | awk '/^\s+Volume:/ {print $5}')
+m=$(pactl list sinks | awk '/^\s+Mute:/ {print $2}')
+
+readarray -t DESC <<< "$d"
+readarray -t VOL <<< "$v"
+readarray -t MUTE <<< "$m"
+
+write_vol 0
+
+for ((i = 1; i < ${#DESC[@]}; i++)); do
+        echo -n " "
+        write_vol $i
+done
+
