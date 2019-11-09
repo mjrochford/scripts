@@ -1,0 +1,6 @@
+#!/bin/sh
+
+FONT="Spacemono"
+FONT_SIZE="10"
+
+lemonstatus | lemonbar -p -f "$FONT:size=$FONT_SIZE"

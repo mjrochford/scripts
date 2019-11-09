@@ -2,21 +2,21 @@
 
 function set_bg() {
          #KDE
-        echo "Setting background $1"
-        dbus-send --session --dest=org.kde.plasmashell --type=method_call /PlasmaShell org.kde.PlasmaShell.evaluateScript 'string:
-        var Desktops = desktops();
+         # echo "Setting background $1"
+         # dbus-send --session --dest=org.kde.plasmashell --type=method_call /PlasmaShell org.kde.PlasmaShell.evaluateScript 'string:
+         # var Desktops = desktops();
 
-        for (i = 0; i < Desktops.length ;i++) {
-          d = Desktops[i];
-          d.wallpaperPlugin = "org.kde.image";
-          d.currentConfigGroup = Array("Wallpaper",
-                                      "org.kde.image",
-                                      "General");
-          d.writeConfig("Image", "file://'$1'");
-        }'
+         # for (i = 0; i < Desktops.length ;i++) {
+         #   d = Desktops[i];
+         #   d.wallpaperPlugin = "org.kde.image";
+         #   d.currentConfigGroup = Array("Wallpaper",
+         #                               "org.kde.image",
+         #                               "General");
+         #   d.writeConfig("Image", "file://'$1'");
+         # }'
 
         # Minimal WM's REQUIRES feh
-        #~/.fehbg
+        ~/.fehbg
 }
 
 function get_natgeo() {
@@ -72,6 +72,7 @@ while getopts "s:u:q:l:pn" opt; do
                 ;;
         l)
                 input_loc=${OPTARG}
+                provider="local"
                 ;;
         n)
                 no_set=true
