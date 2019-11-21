@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+id=$(xdo id -a scratch-term)
+
+show_term() {
+    xdo show $id
+    echo 1 > /tmp/scratch-term
+}
+
+hide_term() {
+    xdo hide $id
+    rm /tmp/scratch-term
+}
+
+if [[ -z $id ]]; then
+    echo 1 > /tmp/scratch-term
+    exec alacritty --title scratch-term &
+elif [[ -f /tmp/scratch-term ]]; then
+    hide_term
+else
+    show_term
+fi
