@@ -1,147 +1,71 @@
 #!/usr/bin/env bash
 
 function set_bg() {
-         #KDE
-         # echo "Setting background $1"
-         # dbus-send --session --dest=org.kde.plasmashell --type=method_call /PlasmaShell org.kde.PlasmaShell.evaluateScript 'string:
-         # var Desktops = desktops();
-
-         # for (i = 0; i < Desktops.length ;i++) {
-         #   d = Desktops[i];
-         #   d.wallpaperPlugin = "org.kde.image";
-         #   d.currentConfigGroup = Array("Wallpaper",
-         #                               "org.kde.image",
-         #                               "General");
-         #   d.writeConfig("Image", "file://'$1'");
-         # }'
-
-        # Minimal WM's REQUIRES feh
-        ~/.fehbg
+    echo "Setting background $1"
+    #KDE
+    # dbus-send --session --dest=org.kde.plasmashell --type=method_call /PlasmaShell org.kde.PlasmaShell.evaluateScript 'string:
+    # var Desktops = desktops();
+    # for (i = 0; i < Desktops.length ;i++) {
+    #   d = Desktops[i];
+    #   d.wallpaperPlugin = "org.kde.image";
+    #   d.currentConfigGroup = Array("Wallpaper",
+    #                               "org.kde.image",
+    #                               "General");
+    #   d.writeConfig("Image", "file://'$1'");
+    # }'
+    # Minimal WM's REQUIRES feh
+    ~/.fehbg
 }
 
 function get_natgeo() {
+    natgeo_pod_json_url="https://www.nationalgeographic.com/photography/photo-of-the-day/_jcr_content/.gallery.json"
+    natgeo_pod_url=$(curl -s $natgeo_pod_json_url |
+        grep -Eo '"sizes":{[^}]+}' |
+        sed -r 's/"sizes":\{"//' | sed -r 's/"\}$//' |
+        awk ' BEGIN { RS="\",\""; FS="\":\""; biggest = 0; } ($1 > biggest ){ biggest = $1; url = $2 } END { print url }')
 
-        natgeo_pod_json_url="https://www.nationalgeographic.com/photography/photo-of-the-day/_jcr_content/.gallery.json"
-        natgeo_pod_url=$(curl -s $natgeo_pod_json_url |
-                grep -Eo '"sizes":{[^}]+}' |
-                sed -r 's/"sizes":\{"//' | sed -r 's/"\}$//' |
-                awk ' BEGIN { RS="\",\""; FS="\":\""; biggest = 0; } ($1 > biggest ){ biggest = $1; url = $2 } END { print url }')
-
-        echo "$natgeo_pod_url"
+    echo "$natgeo_pod_url"
 }
 
 function get_apod() {
-        apod_api_url="https://api.nasa.gov/planetary/apod?api_key=lbhpLpl7om5xVQzsskCXybQQwXv56q53ttdh33N1"
-        apod_url=$(curl -s $apod_api_url |
-                grep -Eo '"hdurl":"[^"]+"' |
-                sed -r 's/"hdurl":"//' | sed -r 's/"//')
+    apod_api_url="https://api.nasa.gov/planetary/apod?api_key=lbhpLpl7om5xVQzsskCXybQQwXv56q53ttdh33N1"
+    apod_url=$(curl -s $apod_api_url |
+        grep -Eo '"hdurl":"[^"]+"' |
+        sed -r 's/"hdurl":"//' | sed -r 's/"//')
 
-        echo "$apod_url"
+    echo "$apod_url"
 }
 
 function get_unsplash() {
 
-        access_key="fc4021cc54993a5cb34a83dc0efbb44abe3c61123933418e5e406656d43e7c55"
-        secret_key="4532b6e4caf1daa5469fdc801953bfc9c8b20ba20a317c0ff3033c9e01e3dd07"
+    access_key="fc4021cc54993a5cb34a83dc0efbb44abe3c61123933418e5e406656d43e7c55"
+    secret_key="4532b6e4caf1daa5469fdc801953bfc9c8b20ba20a317c0ff3033c9e01e3dd07"
 
-        unsplash_api_url="https://api.unsplash.com/"
+    unsplash_api_url="https://api.unsplash.com/"
 
-        if [ ! -z $1 ]; then
-                search_term=$1
-                api_query=$unsplash_api_url"photos/random/?query=$search_term&client_id=$access_key"
-        else
-                api_query=$unsplash_api_url"photos/random/?client_id=$access_key"
-        fi
+    if [ ! -z $1 ]; then
+        search_term=$1
+        api_query=$unsplash_api_url"photos/random/?query=$search_term&client_id=$access_key"
+    else
+        api_query=$unsplash_api_url"photos/random/?client_id=$access_key"
+    fi
 
-        url=$(curl -s $api_query | jq .urls.full)
+    url=$(curl -s $api_query | jq .urls.full)
 
-        echo "$url"
+    echo "$url"
 
 }
 
-while getopts "s:u:q:l:pn" opt; do
-        case ${opt} in
-        s)
-                provider=${OPTARG}
-                ;;
-        u)
-                url=${OPTARG}
-                ;;
-        q)
-                query=${OPTARG}
-                ;;
-        l)
-                input_loc=${OPTARG}
-                provider="local"
-                ;;
-        n)
-                no_set=true
-                ;;
-        p)
-                preview=true
-                ;;
-        :)
-                echo "Invalid option: ${OPTARG} requires an argument" 1>&2
-                ;;
-        esac
-done
+function main() {
+    link_location="$HOME/Pictures/wall/background"
 
-if [ ! -z $1 ]; then
-        bg_location=$1
-fi
-
-case $provider in
-natgeo)
-        echo "Using Provider natgeo"
-        bg_location=~/.cache/background/natgeo
-        curl -s $(get_natgeo) >"$bg_location"
-        ;;
-apod)
-        bg_location=~/.cache/background/apod
-        echo "Using Provider apod - Nasa"
-        curl -s $(get_apod) >"$bg_location"
-        ;;
-unsplash)
-        bg_location=~/.cache/background/unsplash
-
-        echo "Using Provider unsplash"
-
-        pic_url=$(get_unsplash $query)
-        curl -s ${pic_url#\"} >"$bg_location"
-
-        ;;
-local)
-        bg_location=~/.cache/background/bg
-
-        cp -f $input_loc $bg_location
-        ;;
-url) 
-        bg_location=~/.cache/background/bg
-
-        curl -s "$input_loc" > $bg_location
-        ;;
-*)
-        bg_location=~/.cache/background/unsplash
-
-        echo "Using Provider unsplash"
-
-        pic_url=$(get_unsplash $query)
-        curl -s ${pic_url#\"} > "$bg_location"
-
-        ;;
-esac
-
-
-
-link_location="$HOME/Pictures/wall/background"
-
-if [ ! -z $preview ]; then
+    if [ ! -z $preview ]; then
         xdg-open $bg_location &
-fi
+    fi
 
-if [ ! -z $no_set ]; then
+    if [ ! -z $no_set ]; then
         echo "Not setting background"
-else
+    else
         echo "Linking $bg_location to $link_location"
         # Create a link to downloaded bg where kscreenlocker, sddm, and kde are all looking for the bg
         ln -fs "$bg_location" "$link_location"
@@ -150,4 +74,74 @@ else
         # This is needed or else it won't re-evaluate the link
         set_bg ~/.cache/background/tmp
         set_bg "$link_location"
+    fi
+}
+
+while getopts "s:u:q:l:pn" opt; do
+    case ${opt} in
+        s)
+            provider=${OPTARG}
+            ;;
+        u)
+            url=${OPTARG}
+            ;;
+        q)
+            query=${OPTARG}
+            ;;
+        l)
+            input_loc=${OPTARG}
+            provider="local"
+            ;;
+        n)
+            no_set=true
+            ;;
+        p)
+            preview=true
+            ;;
+        :)
+            echo "Invalid option: ${OPTARG} requires an argument" 1>&2
+            ;;
+    esac
+done
+
+if [ ! -z $1 ]; then
+    bg_location=$1
 fi
+
+case $provider in
+    natgeo)
+        echo "Using Provider natgeo"
+        bg_location=~/.cache/background/natgeo
+        curl -s $(get_natgeo) >"$bg_location"
+        ;;
+    apod)
+        bg_location=~/.cache/background/apod
+        echo "Using Provider apod - Nasa"
+        curl -s $(get_apod) >"$bg_location"
+        ;;
+    unsplash)
+        bg_location=~/.cache/background/unsplash
+
+        echo "Using Provider unsplash"
+
+        pic_url=$(get_unsplash $query)
+        curl -s ${pic_url#\"} >"$bg_location"
+
+        ;;
+    local)
+        bg_location=~/.cache/background/bg
+
+        cp -f $input_loc $bg_location
+        ;;
+    url) 
+        bg_location=~/.cache/background/bg
+
+        curl -s "$input_loc" > $bg_location
+        ;;
+    *)
+        printf "Usage $0 -s PROVIDER -[pn][-q QUERY][-u BG_URL][-l LOCAL_PATH]\n"
+        exit 2
+        ;;
+esac
+
+main

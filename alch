@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-while true; do
-    sleep 0.$(($RANDOM * 100 / $(( 1 << 16 ))))
-    xdotool mousedown 1
-    sleep 0.0$(($RANDOM * 100 / $(( 1 << 16 ))))
-    xdotool mouseup 1
-done
