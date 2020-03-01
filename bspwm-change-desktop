@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+[[ -z $1 ]] && exit 1
+
+desktop=$1
+desktop2=$(( $desktop + 5 ))
+bspc desktop -f "^$desktop2"
+bspc desktop -f "^$desktop"

@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+session_name=$(basename $PWD)
+conf_loc=$XDG_CONFIG_HOME/tmux/tmux.conf
+sessions=$(tmux ls -F "#S")
+
+for s in $sessions; do
+    if [[ $s == $session_name ]]; then
+        tmux -f $conf_loc a -t $session_name
+        exit
+    fi
+done
+
+tmux -f $conf_loc new-session -s $session_name
